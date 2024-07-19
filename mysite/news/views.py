@@ -7,20 +7,24 @@ from django.urls import reverse_lazy
 
 from .models import News, Category
 from .forms import NewsForm
+from .utils import MyMixin
 
 
-class HomeNews(ListView):
+class HomeNews(ListView, MyMixin):
     model = News
     template_name = 'news/home_news_list.html'
     context_object_name = 'news'
+    mixin_prop = 'hello world'
+    paginate_by = 2
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Главная страница'
+        context['mixin_prop'] = self.get_prop()
         return context
 
     def get_queryset(self) -> QuerySet[Any]:
-        return News.objects.filter(is_published=1)
+        return News.objects.filter(is_published=1).select_related('category')
 
 
 # def index(request):
@@ -40,7 +44,7 @@ class NewsByCategory(ListView):
     allow_empty = False
 
     def get_queryset(self) -> QuerySet[Any]:
-        return News.objects.filter(category_id=self.kwargs['category_id'], is_published=1)
+        return News.objects.filter(category_id=self.kwargs['category_id'], is_published=1).select_related('category')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)

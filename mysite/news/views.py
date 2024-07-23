@@ -4,10 +4,47 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy
 
+from django.contrib import messages
+from django.contrib.auth import login, logout
 
 from .models import News, Category
-from .forms import NewsForm
+from .forms import NewsForm, UserRegistrationForm, UserLoginForm
 from .utils import MyMixin
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Success')
+            return redirect('login')
+        else:
+            messages.error(request, 'Error')
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'news/register.html', {'form': form})
+
+
+def user_login(request):
+    if request.method == 'POST':
+        form = UserLoginForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, 'Success')
+            return redirect('home')
+        else:
+            messages.error(request, 'Такого нет')
+    else:
+        form = UserLoginForm()
+    return render(request, 'news/login.html', {'form': form})
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('login')
 
 
 class HomeNews(ListView, MyMixin):
